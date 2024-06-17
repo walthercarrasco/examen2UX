@@ -3,7 +3,7 @@ const app = express()
 const { initializeApp } = require("firebase/app")
 const { MongoClient } = require('mongodb')
 const  bodyParser = require('body-parser')
-const {getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,signOut} = require('firebase/auth')
+const {getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut} = require('firebase/auth')
 
 
 
@@ -58,8 +58,22 @@ app.post('/createUser', async (req, res) => {
 });
 
 app.get('/logIn', (req, res) => {
-    console.log('Login...')
-    res.status(200).send('Login!')
+    const auth = getAuth(firebase);
+    const email = req.body.email;
+    const password = req.body.pass;
+    try{
+        const userCredential = signInWithEmailAndPassword(auth, email, password);
+        res.status(200).send({
+            descripcion: 'Usuario Logeado con Exito',
+            resultado: userCredential
+        });
+    } catch (error) {
+        console.error('Hubo un error al Logearse', error)
+        res.status(500).send({
+            descripcion: 'No se pudologear el usuario en firebase',
+            resultado: error
+        });
+    }
 });
 
 app.post('/createPost', (req, res) => {
@@ -82,6 +96,10 @@ app.delete('/deletePost:id', (req, res) => {
     res.status(200).send('Post deleted!')
 });
 
+app.get('/user', (req, res) => {
+    const a = getAuth();
+    res.status(200).send(a.currentUser);
+})
 
 app.listen(3000, () => {
     console.log('Server is running on port 3000')
