@@ -1,7 +1,7 @@
 const express = require('express')
 const app = express()
 const { initializeApp } = require("firebase/app")
-const { MongoClient } = require('mongodb')
+const { MongoClient, ObjectId } = require('mongodb')
 const  bodyParser = require('body-parser')
 const {getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut} = require('firebase/auth')
 
@@ -56,12 +56,13 @@ app.post('/createUser', async (req, res) => {
     }
 });
 
-app.get('/logIn', (req, res) => {
+app.get('/logIn', async (req, res) => {
     var auth = getAuth(firebase);
     const email = req.body.email;
     const password = req.body.pass;
     try{
-        signInWithEmailAndPassword(auth, email, password);
+        await signInWithEmailAndPassword(auth, email, password);
+        auth = await getAuth();
         res.status(200).send({
             descripcion: 'Usuario Logeado con Exito',
             resultado: auth.currentUser
@@ -137,9 +138,21 @@ app.put('/esitPost/:id', (req, res) => {
     res.status(200).send('Post edited!')
 });
 
-app.delete('/deletePost:id', (req, res) => {
-    console.log('Deleting post...')
-    res.status(200).send('Post deleted!')
+app.delete('/deletePost/:id', async (req, res) => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if(!user)
+        res.status(401).send('No hay un usuario logeado');
+    try{
+        const posts = (await db).collection('Post');
+        await posts.deleteOne({user: user.uid, _id: new ObjectId(req.params.id)});
+        res.status(200).send('Post deleted!');
+    }catch(error){
+        console.error('Hubo un error al eliminar el post', error)
+        res.status(500).send({
+            descripcion: 'No se pudo eliminar el post'
+        });
+    }
 });
 
 app.get('/user', (req, res) => {
