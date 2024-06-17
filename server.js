@@ -43,7 +43,6 @@ app.post('/createUser', async (req, res) => {
     const password = req.body.pass;
     try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        (await db).collection('Post').insertOne({user: userCredential.user.uid, Posts:[]})
         res.status(200).send({
             descripcion: 'Usuario Creado con Exito',
             resultado: userCredential
@@ -65,7 +64,7 @@ app.get('/logIn', (req, res) => {
         const userCredential = signInWithEmailAndPassword(auth, email, password);
         res.status(200).send({
             descripcion: 'Usuario Logeado con Exito',
-            resultado: userCredential
+            resultado: auth.currentUser
         });
     } catch (error) {
         console.error('Hubo un error al Logearse', error)
@@ -76,7 +75,7 @@ app.get('/logIn', (req, res) => {
     }
 });
 
-app.get('logOut', (req, res) => {
+app.get('/logOut', (req, res) => {
     const auth = getAuth(firebase);
     try{
         signOut(auth);
@@ -92,14 +91,43 @@ app.get('logOut', (req, res) => {
     }
 })
 
-app.post('/createPost', (req, res) => {
-    console.log('Creating post...')
-    res.status(200).send('Post created!')
+app.post('/createPost', async (req, res) => {
+    const auth = getAuth(firebase);
+    const user = auth.currentUser;
+    if(!user)
+        res.status(401).send('No hay un usuario logeado');
+    const description = req.body.descripton;
+    const title = req.body.title;
+    const post = {user: user.uid, title: title, description: description};
+    try{
+        const posts = db.collection('Post');
+        posts.insertOne(post);
+        res.status(200).send('Post creado con exito');
+    }catch(error){
+        console.error('Hubo un error al crear el post', error)
+        res.status(500).send({
+            descripcion: 'No se pudo crear el post',
+            resultado: error
+        });
+    }
 });
 
 app.get('/listPost', (req, res) => {
-    console.log('Listing posts...')
-    res.status(200).send('Posts listed!')
+    const auth = getAuth(firebase);
+    const user = auth.currentUser;
+    if(!user)
+        res.status(401).send('No hay un usuario logeado');
+    try{
+        const posts = db.collection('Post');
+        const result = posts.find({user: user.currentUser.uid});
+        res.status(200).send(result);
+    }catch(error){
+        console.error('Hubo un error al listar los posts', error)
+        res.status(500).send({
+            descripcion: 'No se pudo listar los posts',
+            resultado: error
+        });
+    }    
 });
 
 app.put('/esitPost/:id', (req, res) => {
