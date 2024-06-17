@@ -57,11 +57,11 @@ app.post('/createUser', async (req, res) => {
 });
 
 app.get('/logIn', (req, res) => {
-    const auth = getAuth(firebase);
+    var auth = getAuth(firebase);
     const email = req.body.email;
     const password = req.body.pass;
     try{
-        const userCredential = signInWithEmailAndPassword(auth, email, password);
+        signInWithEmailAndPassword(auth, email, password);
         res.status(200).send({
             descripcion: 'Usuario Logeado con Exito',
             resultado: auth.currentUser
@@ -96,13 +96,16 @@ app.post('/createPost', async (req, res) => {
     const user = auth.currentUser;
     if(!user)
         res.status(401).send('No hay un usuario logeado');
-    const description = req.body.descripton;
+    const description = req.body.description;
     const title = req.body.title;
     const post = {user: user.uid, title: title, description: description};
     try{
-        const posts = db.collection('Post');
-        posts.insertOne(post);
-        res.status(200).send('Post creado con exito');
+        const posts = (await db).collection('Post');
+        await posts.insertOne(post);
+        res.status(200).send({
+            descripcion: 'Post Creado con Exito',
+            resultado: post
+        });
     }catch(error){
         console.error('Hubo un error al crear el post', error)
         res.status(500).send({
@@ -112,20 +115,19 @@ app.post('/createPost', async (req, res) => {
     }
 });
 
-app.get('/listPost', (req, res) => {
+app.get('/listPost', async(req, res) => {
     const auth = getAuth(firebase);
     const user = auth.currentUser;
     if(!user)
         res.status(401).send('No hay un usuario logeado');
     try{
-        const posts = db.collection('Post');
-        const result = posts.find({user: user.currentUser.uid});
+        const posts = (await db).collection('Post');
+        const result = await posts.find({user: user.uid}).toArray();
         res.status(200).send(result);
     }catch(error){
         console.error('Hubo un error al listar los posts', error)
         res.status(500).send({
-            descripcion: 'No se pudo listar los posts',
-            resultado: error
+            descripcion: 'No se pudo listar los posts'
         });
     }    
 });
