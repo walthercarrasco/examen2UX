@@ -76,6 +76,22 @@ app.get('/logIn', (req, res) => {
     }
 });
 
+app.get('logOut', (req, res) => {
+    const auth = getAuth(firebase);
+    try{
+        signOut(auth);
+        res.status(200).send({
+            descripcion: 'Usuario Deslogeado con Exito',
+        });
+    } catch (error) {
+        console.error('Hubo un error al Deslogearse', error)
+        res.status(500).send({
+            descripcion: 'No se pudo deslogear el usuario en firebase',
+            resultado: error
+        });
+    }
+})
+
 app.post('/createPost', (req, res) => {
     console.log('Creating post...')
     res.status(200).send('Post created!')
