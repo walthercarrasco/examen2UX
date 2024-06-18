@@ -133,7 +133,24 @@ app.get('/listPost', async(req, res) => {
     }    
 });
 
-app.put('/esitPost/:id', (req, res) => {
+app.put('/esitPost/:id', async (req, res) => {
+    const auth = getAuth(firebase);
+    const user = auth.currentUser;
+    if(!user)
+        res.status(401).send('No hay un usuario logeado');
+    try{
+        const posts = (await db).collection('Post');
+        await posts.updateOne({user: user.uid, _id: new ObjectId(req.params.id)}, {$set: req.body});
+        res.status(200).send({
+            descripcion: 'Post Editado con Exito',
+            resultado: req.body
+        });
+    }catch(error){
+        console.error('Hubo un error al editar el post')
+        res.status(500).send({
+            descripcion: 'No se pudo editar el post'
+        });
+    }
     console.log('Editing post...')
     res.status(200).send('Post edited!')
 });
