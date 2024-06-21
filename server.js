@@ -5,10 +5,20 @@ const { MongoClient, ObjectId } = require('mongodb')
 const  bodyParser = require('body-parser')
 const {getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut} = require('firebase/auth')
 
+const url = 'mongodb+srv://walther:examenux2coso@examen2ux.ipcjqh9.mongodb.net/?retryWrites=true&w=majority&appName=examen2UX';
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBJ9uUQ1aSmLwpMmOxtn4Ao9Lk6TwY6gpg",
+    authDomain: "examen2ux-2c3e1.firebaseapp.com",
+    projectId: "examen2ux-2c3e1",
+    storageBucket: "examen2ux-2c3e1.appspot.com",
+    messagingSenderId: "1011066366020",
+    appId: "1:1011066366020:web:af91ba7499ee494ce2b411"
+};
 
 
 async function dbConnect() {
-    const client = new MongoClient('mongodb+srv://walther:examenux2coso@examen2ux.ipcjqh9.mongodb.net/?retryWrites=true&w=majority&appName=examen2UX');
+    const client = new MongoClient(url);
     await client.connect().then(() => {
         console.log('Connected to the database');
     }).catch((error) => {
@@ -19,17 +29,6 @@ async function dbConnect() {
     return client.db('examen2ux');
 }
 
-const firebaseConfig = {
-    apiKey: "AIzaSyBJ9uUQ1aSmLwpMmOxtn4Ao9Lk6TwY6gpg",
-    authDomain: "examen2ux-2c3e1.firebaseapp.com",
-    projectId: "examen2ux-2c3e1",
-    storageBucket: "examen2ux-2c3e1.appspot.com",
-    messagingSenderId: "1011066366020",
-    appId: "1:1011066366020:web:af91ba7499ee494ce2b411"
-};
-  
-
-
 const firebase = initializeApp(firebaseConfig);
 const db = dbConnect();
 
@@ -37,6 +36,8 @@ const db = dbConnect();
 app.use(express.json())
 app.use(bodyParser.urlencoded({extended:true}))
 
+
+//crea un usuario en firebase
 app.post('/createUser', async (req, res) => {
     const auth = getAuth(firebase);
     const email = req.body.email;
@@ -56,6 +57,8 @@ app.post('/createUser', async (req, res) => {
     }
 });
 
+
+// inicia sesion de un usuario pasado por medio del body
 app.get('/logIn', async (req, res) => {
     var auth = getAuth(firebase);
     const email = req.body.email;
@@ -76,6 +79,8 @@ app.get('/logIn', async (req, res) => {
     }
 });
 
+
+//cierra sesion de un usuario si es que hay uno
 app.get('/logOut', (req, res) => {
     const auth = getAuth(firebase);
     try{
@@ -92,6 +97,8 @@ app.get('/logOut', (req, res) => {
     }
 })
 
+
+//crea un post del usuario que esta actualmente logueado
 app.post('/createPost', async (req, res) => {
     const auth = getAuth(firebase);
     const user = auth.currentUser;
@@ -116,6 +123,8 @@ app.post('/createPost', async (req, res) => {
     }
 });
 
+
+//lista los post de el usuario que esta actualmente logueado
 app.get('/listPost', async(req, res) => {
     const auth = getAuth(firebase);
     const user = auth.currentUser;
@@ -133,6 +142,8 @@ app.get('/listPost', async(req, res) => {
     }    
 });
 
+
+//Edita un post en especifico de el usuario que esta actualmente logueado
 app.put('/esitPost/:id', async (req, res) => {
     const auth = getAuth(firebase);
     const user = auth.currentUser;
@@ -155,6 +166,8 @@ app.put('/esitPost/:id', async (req, res) => {
     res.status(200).send('Post edited!')
 });
 
+
+//Elimina un post de el usuario que esta actualmente logueado
 app.delete('/deletePost/:id', async (req, res) => {
     const auth = getAuth();
     const user = auth.currentUser;
